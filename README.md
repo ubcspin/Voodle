@@ -13,7 +13,7 @@ Vocal prototyping for physical user interfaces.
 		* Navigate into your `node-core-audio` folder and run `node-gyp rebuild`.
 		*NOTE: if you are running Python >3:
 		make sure Python < 3 && >= 2.7 is installed
-			run node-gyp rebuild --python=python2.7
+			run `node-gyp rebuild --python=python2.7'
 		* Note if you are on a mac, MAY need to install the 'nan' package:
 			`cd` to `node-core-audio`
 			`npm i nan`
