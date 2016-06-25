@@ -8,23 +8,26 @@ Vocal prototyping for physical user interfaces.
 * 2. Note the two JSON files: `package[mac_use_this].json` and `package[windows_use_this].json.` If you are running OSX or linux rename `package[mac_use_this].json` -> `package.json`. If you are running Windows rename `package[windows_use_this].json` -> `package.json`. 
 * 3. Install [Node here](https://nodejs.org/en/). After the install, you may have to restart terminal.
 * 4. Open a terminal window and navigate to the root Voodle directory. Type: `npm install`.
-* 5. Next, install React by typing `npm install react`. 
+* 5. Next, install React by typing `npm install react`.
+ 
 * 6. You will need to manually install the node-module 'node-core-audio'. The process is as follows:
 
 
 	* **Windows/OSX users:**
 		* 7. Clone the git repository `https://github.com/ZECTBynmo/node-core-audio.git` into your `node-modules` folder.
+
 		* 8. Navigate into your `node-core-audio` folder and run `node-gyp rebuild`. It is possible that you need to install node-gyp by typing (perhaps as sudo) `npm install -g node-gyp`.
 
-			*Note 1: if you are running Python >3:
+
+		Note 1: if you are running Python >3:
 		make sure Python < 3 && >= 2.7 is installed
 			run `node-gyp rebuild --python=python2.7`
 
-			*Note 2: if you are on a mac, MAY need to install the 'nan' package:
+		Note 2: if you are on a mac, MAY need to install the 'nan' package:
 			`cd` to `node-core-audio`
 			`npm i nan`
 
-			*Note 3: If you are still having node-gyp problems ensure that you have the requisite dependencies outlined here: https://www.npmjs.com/package/node-gyp .
+		Note 3: If you are still having node-gyp problems ensure that you have the requisite dependencies outlined here: https://www.npmjs.com/package/node-gyp .
 	* **Linux users:**
 		* Clone the git repository `https://github.com/ZECTBynmo/node-core-audio.git` into your `node-modules` folder.
 		* Navigate into your `node-core-audio` folder and replace `portaudio` with this source `http://www.portaudio.com/archives/pa_stable_v19_20140130.tgz`.
