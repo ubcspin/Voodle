@@ -10,6 +10,8 @@ Vocal prototyping for physical user interfaces.
 * 4. Open a terminal window and navigate to the root Voodle directory. Type: `npm install`.
 * 5. Next, install React by typing `npm install react`. 
 * 6. You will need to manually install the node-module 'node-core-audio'. The process is as follows:
+
+
 	* **Windows/OSX users:**
 		* 7. Clone the git repository `https://github.com/ZECTBynmo/node-core-audio.git` into your `node-modules` folder.
 		* 8. Navigate into your `node-core-audio` folder and run `node-gyp rebuild`. It is possible that you need to install node-gyp by typing (perhaps as sudo) `npm install -g node-gyp`.
@@ -17,9 +19,11 @@ Vocal prototyping for physical user interfaces.
 			*Note 1: if you are running Python >3:
 		make sure Python < 3 && >= 2.7 is installed
 			run `node-gyp rebuild --python=python2.7`
+
 			*Note 2: if you are on a mac, MAY need to install the 'nan' package:
 			`cd` to `node-core-audio`
 			`npm i nan`
+
 			*Note 3: If you are still having node-gyp problems ensure that you have the requisite dependencies outlined here: https://www.npmjs.com/package/node-gyp .
 	* **Linux users:**
 		* Clone the git repository `https://github.com/ZECTBynmo/node-core-audio.git` into your `node-modules` folder.
@@ -50,11 +54,3 @@ Vocal prototyping for physical user interfaces.
 * Open a new browser window and go to `localhost:2000`.
 * Just have fun.
 
---
-(Archive)
-##Processing Voodle
-###Setting up Processing Voodle:
-
-* Processing Voodle requires Processing. You can download it here: [https://processing.org/](https://processing.org/).
-
-Note that older versions of Voodle use the processing sound library. The most recent versions (>=1.3) of this library have dependencies that are only available to OSX/Linux users. You can download previous releases of sound here: https://github.com/processing/processing-sound/releases.
