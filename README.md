@@ -50,8 +50,8 @@ Vocal prototyping for physical user interfaces.
 		* Dearest linux users, if you find you are running into new install problems, even if solved them yourselves, please notify me at damarino (at) cs.ubc.ca.
 
 ###Running Voodle:
-
-* First you will need to deploy. This only needs to be done once with each stable version. Open a terminal window and ensure you are in the root of Voodle and type `npm run deploy`.
+* Note: the following steps must be done in `/Voodle`:
+* First you will need to deploy. This only needs to be done once with each stable version. Open a terminal window and type `npm run deploy`.
 	* Note (optional): If you are looking to do some development of your own you can run the dev server with `npm run dev` at `localhost:1337`.
 * To start Voodle, type `npm start`.
 * Open a new browser window and go to `localhost:2000`.
