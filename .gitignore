@@ -4,3 +4,4 @@ package.json
 recordings/*.csv
 recordings/*.wav
 recordings/*.json
+npm-debug.log.*

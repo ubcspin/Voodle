@@ -1,5 +1,6 @@
 import React from 'react';
 var Slider = require("./slider.jsx")
+var reverse = false;
 var Settings = React.createClass({
 	onChildChange: function(keyname){
 		this.props.emit("updateParams", keyname);
@@ -8,7 +9,6 @@ var Settings = React.createClass({
 	getInitialState: function(){
 
 		return { 
-			recording:false, 
 			smoothing:0.8,
 			amp:0.0,
 			pitch:0.0,
@@ -19,56 +19,94 @@ var Settings = React.createClass({
 			motorMax: 255,
 			motorMin: 50,
 			socket:this.props.socket,
-			recordingStatus:"",
-			startTime: new Date(),
-			maxRecLength: 4000
+			maxRecLength: 3000
 		}
 
 	},
 	startRecording: function(){
-		if (this.state.recording == false){
+		console.log("startRecording in jsx called!")
+		if (this.props.recording == false){
+			console.log("in if")
 			this.props.emit("startRec")
-			console.log("startRecording in jsx called!")
-			this.setState({	recording:true,
-						startTime: new Date(),
-						recordingStatus: "recording"})
 		}
+	},
 		
+	recordingStatus: function(){
+		if(this.props.recording){
+			return "recording!" + (new Date() - this.props.startRecTime)
+		}
+		else{
+			return ""
+		}
 	},
 	stopRecording: function(){
-		if (this.state.recording == true){
+		console.log('stop rec called')
+		if (this.props.recording){
+			console.log('in first if!')
 
-			this.setState({recordingStatus:"",
-							recording:false})
+			
 			this.props.emit("stopRec")
 			console.log("stop rec emit called!")
 		}
-		this.setState({recordingStatus:"",
-							recording:false})
-		
+		else{	
+				console.log('stop rec else clause')
+				
+				}
 		
 	},
 	reverse: function(){
 			this.props.emit("reverse")
 			console.log("reverse called!")
+
 	},
+
+	onItemClick: function (event) {
+	if (!reverse){
+    event.currentTarget.style.backgroundColor = '#AC0';
+    reverse = true
+    this.reverse()
+	}
+	else if (reverse){
+	event.currentTarget.style.backgroundColor = '#aaa';
+	reverse = false
+	this.reverse()
+	}
+
+	},
+
 	render: function(){
+		var timeBar;
 		var countdown = "0";
-		if (this.state.recording){
+		var timeBarFill = "#FF9090"
+		if (this.props.recording){
 			// console.log("rec state",this.state.recording)
-			countdown = new Date() -this.state.startTime
+			countdown = new Date()-this.props.startRecTime
+			timeBarFill = "#FF3830";
 			if (countdown > this.state.maxRecLength){
+
+				countdown=0
+				this.props.emit("stopRec")
+				console.log('countdown val: ',countdown)
+				console.log('is anyone out there?')
 				// console.log("in countdown IF")
 				// this.stopRecording();
 			};
 		}
+		else if (!this.props.recording){
+			timeBarFill="#FF9090"
+		}	
+		else if (this.props.reverse){
+			buttonFill="#FF9090"
+		}
+		
 		return (
 			<div>
 			<div id ="leftPanel">
 				<div id = "edit">
 				<span id="title">Settings</span>
 				<p />
-
+					<button type="button" id="button" onClick={this.reverse} onClick={this.onItemClick}><b>Reverse</b></button>
+					<p />
 					{stringifyFloat(this.state.ap_weight)} <b>pitch bias</b> 
 					<Slider inputValue={0.5}
 							minValue={0}
@@ -79,7 +117,7 @@ var Settings = React.createClass({
 					<b> amp bias </b>{stringifyFloat(1.0-this.state.ap_weight)}
 
 					<p />
-					<b>Scale factor: </b>{this.state.scale} 
+					<b>output gain: </b>{this.state.scale} 
 					<Slider inputValue={this.state.scale}
 							minValue={0}
 							maxValue={6}
@@ -95,23 +133,29 @@ var Settings = React.createClass({
 							stepValue={0.05}
 							callback={this.onChildChange} />
 					<p />
-					<button type="button" id="button" onClick={this.reverse}><b>Reverse</b></button>
+					
 				</div>
 				<p />
 				<div id="edit">
-					<span id='title'>Recording</span><p />
+					<span id='title'>Save to MacaronBit</span><p />
 					<button type="button" id="button" onClick={this.startRecording}><b>Record</b></button>  
 					<button type="button" id="button" onClick={this.stopRecording}><b>Stop</b></button>
 					<br />
-					{this.state.recordingStatus}<br />
-					{countdown}ms
+
+					{this.recordingStatus()}<br />
+					
+					<svg id = "recordingBar" height="20" >
+						<rect id = "recordingbg" width="3000" height="20" />
+						<rect width={(3000-countdown)/10} height="20" fill={timeBarFill} />
+					</svg>
+					
 				</div>
 			</div>
 			<div id="rightPanel">
 				<p />
 				<div id="edit">
 					<span id='title'>Servo settings</span><p />
-					<b>Max servo range: {this.state.servoMax}</b>
+					<b>Max servo range: {this.state.servoMax}°</b>
 					<Slider inputValue={this.state.servoMax}
 							minValue={0}
 							maxValue={360}
@@ -119,7 +163,7 @@ var Settings = React.createClass({
 							stepValue={1} 
 							callback={this.onChildChange} />
 					<p />
-					<b>Min. servo range: {this.state.servoMin}</b>
+					<b>Min. servo range: {this.state.servoMin}°</b>
 					<Slider inputValue={this.state.servoMin}
 							minValue={0}
 							maxValue={360}

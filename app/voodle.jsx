@@ -12,7 +12,9 @@ var Voodle = React.createClass({
 			scale:500,
 			amp:0.0,
 			pitch:0.0,
-			socket:{}
+			socket:{},
+			recording:false,
+			startRecTimeString: Date.now() // unix time like 1398712390409123
 		}
 	},
 	emit: function(st,msg) {
@@ -44,11 +46,12 @@ var Voodle = React.createClass({
 			</div>
 			<div id ="overlay">
 					<div id ="readOut">
+						Command Components [0-1]<p />
 						<b>Amplitude:</b> {(this.state.amp).toString().substring(0,5)}
 						<p />
 						<b>Pitch:</b> {(this.state.pitch).toString().substring(0,5)}
 					</div>
-					<Settings emit={this.emit}/>
+					<Settings emit={this.emit} recording={this.state.recording} startRecTime={new Date(this.state.startRecTimeString)} reverse={false}/>
 				</div>
 
 			</div>)

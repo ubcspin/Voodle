@@ -27,9 +27,11 @@ var parameters = {
 	motorMaxSpeed:255,
 	frameRate:34,
 	framesPerBuffer:400,
-	sampleRate:40000
+	sampleRate:40000,
+	reverse:false,
 }
-
+var startRecTime = new Date();
+var startRecTimeString = Date.now() // string like 123214312341234
 // David
 
 var led;
@@ -48,7 +50,7 @@ var servo;
 //
 
 var board;
-var reverse = false;
+
 
 var pitch;
 var ampRaw;
@@ -73,6 +75,7 @@ function main() {
 	app.get('/', function (req, res) {
 	  res.sendfile(__dirname + '/voodle-index.html');
 	});
+	console.log("dir name: ",__dirname)
 
 	app.use(express.static(__dirname + '/css'));
 
@@ -144,7 +147,7 @@ function main() {
 	  		stopRecording()
 	  	})
 	  	socket.on("reverse", function(){
-	  		reverse = !reverse
+	  		parameters.reverse = !parameters.reverse
 	  	})
 	});
 
@@ -215,13 +218,15 @@ function writeToAudioBufferFile(name, buffer) {
 function startRecording(){
 	console.log("start rec. has been called!")
 	recording = true;
-	var n = new Date()
-	name = n.getTime();
+	startRecTime = new Date()
+	startRecTimeString = Date.now() // unix time like 37452342345243
+	name = startRecTime.getTime();
 }
 
 function stopRecording(){
 	recording = false;
 	writeParams();
+	
 }
 
 function writeParams(){
@@ -304,6 +309,8 @@ function broadcastValues() {
 				amp:ampGain,
 				pitch:pitchGain,
 				mix:smoothOut,
+				recording:recording,
+				startRecTimeString:startRecTimeString, // in unix time like 123123413413
 			}
 		);
 		// iohandle.broadcastPitch(pitchGain);
@@ -327,12 +334,13 @@ function setArduino(sm) {
 	// 	servo.to(mapValue(sm, 0, 1, parameters.servoMin, parameters.servoMax));
 	// 	}
 	// 	else {
+
 	// 			servo.to(parameters.servoMax - mapValue(sm, 0, 1, parameters.servoMin, parameters.servoMax));
 	// 		}
 	// };
 
 	if (servoCreated){
-		if (reverse){
+		if (parameters.reverse){
 		//maps the audio input to the servo value range, and calculates the difference
 		//so that it moves upwards with increased amplitude.
 			servo.to(parameters.servoMax - mapValue(sm, 0, 1, parameters.servoMin, parameters.servoMax));
@@ -342,7 +350,7 @@ function setArduino(sm) {
 			}
 	};
 	if(motorCreated){
-		if (reverse){
+		if (parameters.reverse){
 			motor.reverse(mapValue(sm, 0, 1, parameters.motorMinSpeed, parameters.motorMaxSpeed));
 		}
 		else {
