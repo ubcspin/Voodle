@@ -14,7 +14,10 @@ var iohandle = new IoHandler(io);
 var Recorder = require('./recorder.js');
 var recHandler = new Recorder();
 
+
+
 // Globals
+var recordingFilePath = '/Users/maclean/Documents/HOME/WORK/CODE/MB-recordings/'
 
 var parameters = {
 	smoothValue: 0.8, 
@@ -207,7 +210,7 @@ function writeToAudioBufferFile(name, buffer) {
 	buffer.forEach(function(f){
 		out = out +'0,' + f + '\n'
 	})
-	fs.appendFile("C:\\Users\\David\\Documents\\CuddleBitV2\\recordings\\"+name+"_recording.csv", out, function(err){
+	fs.appendFile(recordingFilePath +name+"_recording.csv", out, function(err){
 		if (err){
 			return console.log(err);
 		}
@@ -230,7 +233,7 @@ function stopRecording(){
 }
 
 function writeParams(){
-	fs.appendFile("C:\\Users\\David\\Documents\\CuddleBitV2\\recordings\\" + name + "_parameters.json", JSON.stringify(parameters), function(err){
+	fs.appendFile(recordingFilePath  + name + "_parameters.json", JSON.stringify(parameters), function(err){
 	if (err){
 		return console.log(err);
 	}
