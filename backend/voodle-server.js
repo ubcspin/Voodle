@@ -1,3 +1,10 @@
+//------------------------------------------------------------------------------
+// Voodle
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+// Requires
+//------------------------------------------------------------------------------
 var coreAudio = require("node-core-audio");
 var pitchFinder = require('pitchfinder');
 var express = require('express');
@@ -6,6 +13,7 @@ var server = require('http').Server(app);
 var io = require('socket.io')(server);
 var fs = require('fs');
 var five = require('johnny-five');
+var serialPort = require('serialport'); // for checking if serial ports are open
 
 // Local requires
 var IoHandler = require('./iohandler.js');
@@ -16,7 +24,9 @@ var recHandler = new Recorder();
 
 
 
+//------------------------------------------------------------------------------
 // Globals
+//------------------------------------------------------------------------------
 var recordingFilePath = '/Users/maclean/Documents/HOME/WORK/CODE/MB-recordings/'
 
 var parameters = {
@@ -81,8 +91,6 @@ function main() {
 	console.log("dir name: ",__dirname)
 
 	app.use(express.static(__dirname + '/css'));
-
-	board = new five.Board();
 
 	detectPitchAMDF = new pitchFinder.AMDF({
 		sampleRate:40000,
@@ -154,6 +162,24 @@ function main() {
 	  	})
 	});
 
+	// Deal with the stupid boards
+	serialPort.list(function (err, ports) {
+		var filtered = ports.filter(function(port){
+			// SerialPort(path,options,openImmediately)
+			var srlport = new serialPort.SerialPort(port.comName,{},false)
+			return 	(port.comName.slice(0,11) == '/dev/cu.usb') &&
+					(!srlport.isOpen()) ? true : false;
+		})
+		boardload(filtered[0].comName);
+		console.log(filtered)
+	});
+
+}
+
+function boardload(portPath) {
+	console.log("Portpath",portPath)
+	board = new five.Board( { port: portPath } );
+
 	board.on("ready", function() {
 
 	if (servoMode){
@@ -197,6 +223,7 @@ function main() {
 });
 
 }
+
 
 function handleRecording(buffer){
 	if (recording ==  true){

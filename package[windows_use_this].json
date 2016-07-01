@@ -17,6 +17,7 @@
     "pitchfinder": "^2.0.3",
     "react": "^0.13.3",
     "script-loader": "^0.6.1",
+    "serialport": "^3.1.2",
     "socket.io": "^1.4.6",
     "socket.io-client": "^1.4.6",
     "webpack-dev-server": "^1.14.1"
