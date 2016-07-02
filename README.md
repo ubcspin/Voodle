@@ -57,3 +57,8 @@ Vocal prototyping for physical user interfaces.
 * Open a new browser window and go to `localhost:2000`.
 * Just have fun.
 
+###Setting up the Arduino
+
+![wiring diagram](https://raw.githubusercontent.com/ubcspin/Voodle/master/images/wiring_diagram.jpg)
+
+Power pin can be any 3-6V source. Ground pin must be common with the microcontroller, i.e., you can use any ground as long as it is connected to an Arduino ground. Data pin must be one of the PWM pins on the Arduino. In this case, it’s pin 10.
