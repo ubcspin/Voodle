@@ -22,10 +22,16 @@ var Voodle = React.createClass({
 	},
 	componentDidMount: function() {
 		var socket = io.connect("http://localhost:2000");
+		var dirty_socket = io.connect("http://localhost:3000");
 
 		socket.on("broadcast",function(msg){
 			this.setState(msg);
 		}.bind(this))
+
+		socket.on("dirty_reroute",function(msg){
+			console.log("we did it")
+			dirty_socket.emit('dirty_reroute',msg);
+		})
 
 		this.setState({socket:socket})
 	},

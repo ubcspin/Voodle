@@ -11,6 +11,7 @@ var express = require('express');
 var app = express();
 var server = require('http').Server(app);
 var io = require('socket.io')(server);
+
 var fs = require('fs');
 var five = require('johnny-five');
 var serialPort = require('serialport'); // for checking if serial ports are open
@@ -21,8 +22,6 @@ var iohandle = new IoHandler(io);
 
 var Recorder = require('./recorder.js');
 var recHandler = new Recorder();
-
-
 
 //------------------------------------------------------------------------------
 // Globals
@@ -162,73 +161,72 @@ function main() {
 	  	})
 	});
 
-	// Deal with the stupid boards
-	serialPort.list(function (err, ports) {
-		var filtered = ports.filter(function(port){
-			// SerialPort(path,options,openImmediately)
-			var srlport = new serialPort.SerialPort(port.comName,{},false)
-			return 	(port.comName.slice(0,11) == '/dev/cu.usb') &&
-					(!srlport.isOpen()) ? true : false;
-		})
-		boardload(filtered[0].comName);
-		console.log(filtered)
-	});
+	// // Deal with the stupid boards
+	// serialPort.list(function (err, ports) {
+	// 	var filtered = ports.filter(function(port){
+	// 		// SerialPort(path,options,openImmediately)
+	// 		var srlport = new serialPort.SerialPort(port.comName,{},false)
+	// 		return 	(port.comName.slice(0,11) == '/dev/cu.usb') &&
+	// 				(!srlport.isOpen()) ? true : false;
+	// 	})
+	// 	boardload(filtered[0].comName);
+	// 	console.log(filtered)
+	// });
 
 }
 
-function boardload(portPath) {
-	console.log("Portpath",portPath)
-	board = new five.Board( { port: portPath } );
+// function boardload(portPath) {
+// 	console.log("Portpath",portPath)
+// 	board = new five.Board( { port: portPath } );
 
-	board.on("ready", function() {
+// 	board.on("ready", function() {
 
-	if (servoMode){
-			console.log('servo created!')
-			servo = new five.Servo({
-		    pin: 10,
-		    startAt: 90
-		  });
+// 	if (servoMode){
+// 			console.log('servo created!')
+// 			servo = new five.Servo({
+// 		    pin: 10,
+// 		    startAt: 90
+// 		  });
 
-		  servoCreated=true;
-		};
-	if (motorMode){
-		//this uses the adafruit shield (v2).
-		var configs = five.Motor.SHIELD_CONFIGS.ADAFRUIT_V2;
-	  		motor = new five.Motor(configs.M1);
+// 		  servoCreated=true;
+// 		};
+// 	if (motorMode){
+// 		//this uses the adafruit shield (v2).
+// 		var configs = five.Motor.SHIELD_CONFIGS.ADAFRUIT_V2;
+// 	  		motor = new five.Motor(configs.M1);
 
-	  // Inject the `motor` hardware into
-	  // the Repl instance's context;
-	  // allows direct command line access
-		board.repl.inject({
-	    motor: motor
-	    });
-	    motorCreated=true;	
-	};
-	if (ledMode){
-		//constructs an RGB LED
-	  led = new five.Led.RGB({
-	    pins: {
-	      red: 9,
-	      green: 10,
-	      blue: 11,
-	    }
-	  });
+// 	  // Inject the `motor` hardware into
+// 	  // the Repl instance's context;
+// 	  // allows direct command line access
+// 		board.repl.inject({
+// 	    motor: motor
+// 	    });
+// 	    motorCreated=true;	
+// 	};
+// 	if (ledMode){
+// 		//constructs an RGB LED
+// 	  led = new five.Led.RGB({
+// 	    pins: {
+// 	      red: 9,
+// 	      green: 10,
+// 	      blue: 11,
+// 	    }
+// 	  });
 
-	  this.repl.inject({
-	    led: led
-	  });
-	  ledCreated =true;
-	}
+// 	  this.repl.inject({
+// 	    led: led
+// 	  });
+// 	  ledCreated =true;
+// 	}
 
-});
+// });
 
-}
+// }
 
 
 function handleRecording(buffer){
 	if (recording ==  true){
 		writeToAudioBufferFile(name, buffer)
-
 	}
 }
 
@@ -351,6 +349,11 @@ function broadcastValues() {
 		
 }
 
+function sendDirtySocket(to) {
+	// servo.to(to)
+	iohandle.emit('dirty_reroute',to);
+}
+
 
 //////////////////////////////////////////////////////////////
 //Arduino communication code/////////////////////////////////
@@ -369,16 +372,24 @@ function setArduino(sm) {
 	// 		}
 	// };
 
-	if (servoCreated){
+	// if (servoCreated){ uncomment me later when things are better
+		var sendme = 0;
 		if (parameters.reverse){
-		//maps the audio input to the servo value range, and calculates the difference
-		//so that it moves upwards with increased amplitude.
-			servo.to(parameters.servoMax - mapValue(sm, 0, 1, parameters.servoMin, parameters.servoMax));
+			sendme = parameters.servoMax - mapValue(sm, 0, 1, parameters.servoMin, parameters.servoMax);
+		} else {
+			sendme = mapValue(sm, 0, 1, parameters.servoMin, parameters.servoMax);
 		}
-		else {
-				servo.to(mapValue(sm, 0, 1, parameters.servoMin, parameters.servoMax));
-			}
-	};
+		sendDirtySocket(sendme);
+		console.log("Send me val ", sendme)
+		// if (parameters.reverse){
+		// //maps the audio input to the servo value range, and calculates the difference
+		// //so that it moves upwards with increased amplitude.
+		// 	servo.to(parameters.servoMax - mapValue(sm, 0, 1, parameters.servoMin, parameters.servoMax));
+		// }
+		// else {
+		// 		servo.to(mapValue(sm, 0, 1, parameters.servoMin, parameters.servoMax));
+		// 	}
+	// };
 	if(motorCreated){
 		if (parameters.reverse){
 			motor.reverse(mapValue(sm, 0, 1, parameters.motorMinSpeed, parameters.motorMaxSpeed));

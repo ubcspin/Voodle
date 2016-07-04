@@ -44,6 +44,11 @@ IoHandler.prototype.broadcast = function (msg){
 	return msg;
 }
 
+IoHandler.prototype.emit = function (label,msg){
+	// console.log("Yes david I am in here don't worry")
+	this.io.emit(label, msg);
+	return msg;
+}
 
 
 // export the class
