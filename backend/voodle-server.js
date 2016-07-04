@@ -26,7 +26,7 @@ var recHandler = new Recorder();
 //------------------------------------------------------------------------------
 // Globals
 //------------------------------------------------------------------------------
-var recordingFilePath = '/Users/maclean/Documents/HOME/WORK/CODE/MB-recordings/'
+var recordingFilePath = '/Users/maclean/Documents/HOME/WORK/CODE/MacaronBit/recordings/'
 
 var parameters = {
 	smoothValue: 0.8, 
