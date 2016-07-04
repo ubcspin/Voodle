@@ -29,8 +29,13 @@ var Voodle = React.createClass({
 		}.bind(this))
 
 		socket.on("dirty_reroute",function(msg){
-			console.log("we did it")
-			dirty_socket.emit('dirty_reroute',msg);
+			if (document.hasFocus()) {
+				
+				dirty_socket.emit('dirty_reroute',msg);
+			}
+
+			
+			
 		})
 
 		this.setState({socket:socket})
