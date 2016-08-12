@@ -14,6 +14,9 @@ config = {
         publicPath: '/',
         filename: 'bundle.js',
     },
+    devServer: {
+        port: 1337
+    },
     module: {
         loaders: [{
             test: /\.jsx?$/,
