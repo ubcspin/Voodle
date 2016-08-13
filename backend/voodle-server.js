@@ -29,6 +29,7 @@ var parameters = {
 	framesPerBuffer:400,
 	sampleRate:40000,
 	reverse:false,
+	on:true
 }
 var startRecTime = new Date();
 var startRecTimeString = Date.now() // string like 123214312341234
@@ -69,6 +70,7 @@ var name;
 function main() {
 	//set up server
 	server.listen(2000);
+	
 
 	app.use(express.static(__dirname + '/js'));
 
@@ -148,6 +150,24 @@ function main() {
 	  	})
 	  	socket.on("reverse", function(){
 	  		parameters.reverse = !parameters.reverse
+	  	})
+	  	socket.on("toggleOn", function(){
+	  		parameters.on = !parameters.on
+	  	})
+	  	socket.on("exportParams", function(){
+	  		var time = new Date().getTime();
+	  		bigFatParametersList = "";
+	  		
+	  		for (key in parameters) {
+	  			console.log(key);
+	  			console.log(parameters[key])
+
+	  			bigFatParametersList = bigFatParametersList+key+": "+parameters[key]+"  \n"
+	  		};
+            console.log('exporting parameters!');
+            fs.writeFile('recordings/'+time+'_parameters_snapshot.txt', bigFatParametersList, function (err) {
+                  if (err) return console.log(err);
+              })
 	  	})
 	});
 
@@ -284,8 +304,9 @@ function processAudio( inputBuffer ) {
 		last = now;
 		
 		//broadcasts values to frontend
-		broadcastValues();
-
+		if(parameters.on){
+				broadcastValues();
+		}
 		}
 
 		return inputBuffer;

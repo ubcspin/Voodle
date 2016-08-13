@@ -91,3 +91,16 @@ body {
     margin: 4px 2px;
     cursor: pointer;
 }
+
+
+#powerButton {
+    background-color: #AC0;
+    border: none;
+    color: black;
+    padding: 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    margin: 4px 2px;
+    cursor: pointer;
+}

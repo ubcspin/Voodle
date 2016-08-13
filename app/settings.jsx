@@ -1,6 +1,7 @@
 import React from 'react';
 var Slider = require("./slider.jsx")
 var reverse = false;
+var on = true;
 var Settings = React.createClass({
 	onChildChange: function(keyname){
 		this.props.emit("updateParams", keyname);
@@ -60,18 +61,41 @@ var Settings = React.createClass({
 
 	},
 
-	onItemClick: function (event) {
-	if (!reverse){
-    event.currentTarget.style.backgroundColor = '#AC0';
-    reverse = true
-    this.reverse()
-	}
-	else if (reverse){
-	event.currentTarget.style.backgroundColor = '#aaa';
-	reverse = false
-	this.reverse()
-	}
+	toggleOn: function(){
+		this.props.emit("toggleOn")
+		console.log("turning Voodle on/off!")
+	},
 
+	onItemClick: function (event) {
+		if (!reverse){
+    		event.currentTarget.style.backgroundColor = '#AC0';
+    		reverse = true
+    		this.reverse()
+		}
+		else if (reverse){
+			event.currentTarget.style.backgroundColor = '#aaa';
+			reverse = false
+			this.reverse()
+		}
+
+	},
+
+	toggleOnOff: function (event) {
+		if (!on){
+    		event.currentTarget.style.backgroundColor = '#AC0';
+    		on = true
+    		this.toggleOn()
+		}
+		else if (on){
+			event.currentTarget.style.backgroundColor = '#aaa';
+			on = false
+			this.toggleOn()
+		}
+
+	},
+
+	exportParams: function(event){
+		this.props.emit("exportParams")
 	},
 
 	render: function(){
@@ -105,8 +129,12 @@ var Settings = React.createClass({
 				<div id = "edit">
 				<span id="title">Settings</span>
 				<p />
+					<button type="button" id="powerButton" onClick={this.someFun} onClick={this.toggleOnOff}><b>on/off</b></button>
+
 					<button type="button" id="button" onClick={this.reverse} onClick={this.onItemClick}><b>Reverse</b></button>
-					<p />
+					
+					
+				< p />
 					{stringifyFloat(this.state.ap_weight)} <b>pitch bias</b> 
 					<Slider inputValue={0.5}
 							minValue={0}
@@ -148,7 +176,8 @@ var Settings = React.createClass({
 						<rect id = "recordingbg" width="3000" height="20" />
 						<rect width={(3000-countdown)/10} height="20" fill={timeBarFill} />
 					</svg>
-					
+					<p />
+					<button type ="button" id="button" onClick={this.exportParams}><b>export parameters</b></button>
 				</div>
 			</div>
 			<div id="rightPanel">

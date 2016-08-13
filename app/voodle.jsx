@@ -41,7 +41,9 @@ var Voodle = React.createClass({
 			<div>
 			<div id = "canvas">
 
-				
+			<svg id = "circleContainer">
+				<circle cx={window.innerWidth/2} cy={window.innerHeight/2} r={radius} fill="#495042" />
+			</svg>
 				
 			</div>
 			<div id ="overlay">
@@ -50,6 +52,8 @@ var Voodle = React.createClass({
 						<b>Amplitude:</b> {(this.state.amp).toString().substring(0,5)}
 						<p />
 						<b>Pitch:</b> {(this.state.pitch).toString().substring(0,5)}
+						
+
 					</div>
 					<Settings emit={this.emit} recording={this.state.recording} startRecTime={new Date(this.state.startRecTimeString)} reverse={false}/>
 				</div>
