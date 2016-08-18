@@ -55,7 +55,15 @@ var Voodle = React.createClass({
 						
 
 					</div>
-					<Settings emit={this.emit} recording={this.state.recording} startRecTime={new Date(this.state.startRecTimeString)} reverse={false}/>
+					<Settings 
+						emit={this.emit} 
+						mix={this.state.mix}  
+						smoothingFactor={this.state.smoothingFactor}
+						scaleFactor={this.state.scaleFactor}
+						recording={this.state.recording} 
+						startRecTime={new Date(this.state.startRecTimeString)} 
+						reverse={false}
+					/>
 				</div>
 
 			</div>)

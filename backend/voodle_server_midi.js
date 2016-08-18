@@ -27,8 +27,8 @@ var parameters = {
 	motorMinSpeed:50,
 	motorMaxSpeed:255,
 	frameRate:34,
-	framesPerBuffer:400,
-	sampleRate:40000,
+	framesPerBuffer:100,
+	sampleRate:10000,
 	reverse:false,
 	on:true
 }
@@ -113,9 +113,9 @@ function main() {
 	board = new five.Board();
 
 	detectPitchAMDF = new pitchFinder.AMDF({
-		sampleRate:40000,
-		minFrequency:5,
-		maxFrequency:1200
+		sampleRate:parameters.sampleRate,
+		minFrequency:100,
+		maxFrequency:700
 	});
 
 
@@ -190,69 +190,69 @@ function main() {
 
 	//////////listens for updates from frontend/////////////////////////////
 
-	io.on('connection', function (socket) {
-		console.log("connected to client!");
-	  	socket.on("updateParams", function (data) {
+	// io.on('connection', function (socket) {
+	// 	console.log("connected to client!");
+	//   	socket.on("updateParams", function (data) {
 
-	  		console.log("UpdateParams", data) //remember that this is slightly asynch. with the render loop.
-	  		if ('ap_weight' in data){
-	  			parameters.gain_for_amp = data.ap_weight;
-	  			parameters.gain_for_pitch = 1 - parameters.gain_for_amp;
-	  		}
-	  		if('scale' in data){
-	  			parameters.scaleFactor = data.scale;
-	  			console.log("\nnew scale factor: " + parameters.scaleFactor)
-	  		}
-	  		if('smoothing' in data){
-	  			parameters.smoothValue = data.smoothing;
-	  			console.log("\nnew smooth factor: "+ parameters.smoothValue)
-	  		}
-	  		if ('servoMax' in data){
-	  			console.log("\nnew max servo range:" + parameters.servoMax)
-	  			parameters.servoMax = data.servoMax;
-	  		}
-			if ('servoMin' in data){
-				console.log("\nnew min servo range:" + parameters.servoMin)
-				parameters.servoMin = data.servoMin;
-			}
-			if ('motorMax' in data){
-				console.log("\nnew max motor speed: "+ parameters.motorMaxSpeed)
-				parameters.motorMaxSpeed = data.motorMax;
-			}
-			if ('motorMin' in data){
-				console.log("\nnew min motor speed: "+ parameters.motorMinSpeed)
-				parameters.motorMinSpeed = data.motorMin;
-			}
+	//   		console.log("UpdateParams", data) //remember that this is slightly asynch. with the render loop.
+	//   		if ('ap_weight' in data){
+	//   			parameters.gain_for_amp = data.ap_weight;
+	//   			parameters.gain_for_pitch = 1 - parameters.gain_for_amp;
+	//   		}
+	//   		if('scale' in data){
+	//   			parameters.scaleFactor = data.scale;
+	//   			console.log("\nnew scale factor: " + parameters.scaleFactor)
+	//   		}
+	//   		if('smoothing' in data){
+	//   			parameters.smoothValue = data.smoothing;
+	//   			console.log("\nnew smooth factor: "+ parameters.smoothValue)
+	//   		}
+	//   		if ('servoMax' in data){
+	//   			console.log("\nnew max servo range:" + parameters.servoMax)
+	//   			parameters.servoMax = data.servoMax;
+	//   		}
+	// 		if ('servoMin' in data){
+	// 			console.log("\nnew min servo range:" + parameters.servoMin)
+	// 			parameters.servoMin = data.servoMin;
+	// 		}
+	// 		if ('motorMax' in data){
+	// 			console.log("\nnew max motor speed: "+ parameters.motorMaxSpeed)
+	// 			parameters.motorMaxSpeed = data.motorMax;
+	// 		}
+	// 		if ('motorMin' in data){
+	// 			console.log("\nnew min motor speed: "+ parameters.motorMinSpeed)
+	// 			parameters.motorMinSpeed = data.motorMin;
+	// 		}
 	 
-	  });
-	  	socket.on("startRec",function(){
-	  		startRecording()
-	  	})
-	  	socket.on("stopRec", function(){
-	  		stopRecording()
-	  	})
-	  	socket.on("reverse", function(){
-	  		parameters.reverse = !parameters.reverse
-	  	})
-	  	socket.on("toggleOn", function(){
-	  		parameters.on = !parameters.on
-	  	})
-	  	socket.on("exportParams", function(){
-	  		var time = new Date().getTime();
-	  		bigFatParametersList = "";
+	//   });
+	//   	socket.on("startRec",function(){
+	//   		startRecording()
+	//   	})
+	//   	socket.on("stopRec", function(){
+	//   		stopRecording()
+	//   	})
+	//   	socket.on("reverse", function(){
+	//   		parameters.reverse = !parameters.reverse
+	//   	})
+	//   	socket.on("toggleOn", function(){
+	//   		parameters.on = !parameters.on
+	//   	})
+	//   	socket.on("exportParams", function(){
+	//   		var time = new Date().getTime();
+	//   		bigFatParametersList = "";
 	  		
-	  		for (key in parameters) {
-	  			console.log(key);
-	  			console.log(parameters[key])
+	//   		for (key in parameters) {
+	//   			console.log(key);
+	//   			console.log(parameters[key])
 
-	  			bigFatParametersList = bigFatParametersList+key+": "+parameters[key]+"  \n"
-	  		};
-            console.log('exporting parameters!');
-            fs.writeFile('recordings/'+time+'_parameters_snapshot.txt', bigFatParametersList, function (err) {
-                  if (err) return console.log(err);
-              })
-	  	})
-	});
+	//   			bigFatParametersList = bigFatParametersList+key+": "+parameters[key]+"  \n"
+	//   		};
+ //            console.log('exporting parameters!');
+ //            fs.writeFile('recordings/'+time+'_parameters_snapshot.txt', bigFatParametersList, function (err) {
+ //                  if (err) return console.log(err);
+ //              })
+	//   	})
+	// });
 
 	board.on("ready", function() {
 
@@ -388,7 +388,7 @@ function processAudio( inputBuffer ) {
 		
 		//broadcasts values to frontend
 		if(parameters.on){
-				broadcastValues();
+				// broadcastValues();
 		}
 		}
 
@@ -396,21 +396,6 @@ function processAudio( inputBuffer ) {
 
 }
 
-// var parameters = {
-// 	smoothValue: 0.8, 
-// 	gain_for_amp: 0.4,
-// 	gain_for_pitch: 0.6,
-// 	scaleFactor: 3,
-// 	servoMax: 75,
-// 	servoMin: 10,
-// 	motorMinSpeed:50,
-// 	motorMaxSpeed:255,
-// 	frameRate:34,
-// 	framesPerBuffer:400,
-// 	sampleRate:40000,
-// 	reverse:false,
-// 	on:true
-// }
 
 //// Midi functions
 
@@ -470,40 +455,6 @@ function getmidi(tag) {
 	midi_fn_map[tag](ret)
 	return ret
 }
-
-
-//////////////socket.io emit functions////////////////
-function broadcastValues() {
-		//applies gain to pitch
-		// var pitchGain = parameters.gain_for_pitch * pitch
-		// if (pitchGain > 1.5) {
-		// 	pitchGain = 1.5;
-		// };
-
-		// var ampGain = parameters.gain_for_amp * ampRaw
-		// if (ampGain > 1) {
-		// 	ampGain = 1;
-		// };
-
-		// iohandle.broadcast({
-		// 		amp:ampGain,
-		// 		pitch:pitchGain,
-		// 		mix:smoothOut,
-		// 		recording:recording,
-		// 		startRecTimeString:startRecTimeString, // in unix time like 123123413413
-				// mix: getmidi('mix'),
-				// smoothingFactor: getmidi('smoothingFactor'),
-				// scaleFactor: getmidi('scaleFactor')
-		// 	}
-		// );
-		// iohandle.broadcastPitch(pitchGain);
-		// iohandle.broadcastMix(smoothOut);
-		// iohandle.broadcastAmpGain(parameters.gain_for_amp)
-		// iohandle.broadcastPitchGain(parameters.gain_for_pitch) 
-		// iohandle.broadcastScale(parameters.scaleFactor);
-		
-}
-
 
 //////////////////////////////////////////////////////////////
 //Arduino communication code/////////////////////////////////

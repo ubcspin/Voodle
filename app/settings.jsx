@@ -8,7 +8,6 @@ var Settings = React.createClass({
 		this.setState(keyname)
 	},
 	getInitialState: function(){
-
 		return { 
 			smoothing:0.8,
 			amp:0.0,
