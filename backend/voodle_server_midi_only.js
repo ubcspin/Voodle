@@ -184,17 +184,17 @@ function main() {
 	//start of audio analysis//////////////////////////////////////
 	///////////////////////////////////////////////////////////////
 
-	// // Create a new audio engine
-	// var engine = coreAudio.createNewAudioEngine();
+	// Create a new audio engine
+	var engine = coreAudio.createNewAudioEngine();
 
-	// 	engine.setOptions({
-	// 	outputChannels:1,
-	// 	inputChannels:1,
-	// 	framesPerBuffer:parameters.framesPerBuffer,
-	// 	sampleRate:parameters.sampleRate
-	// });
+		engine.setOptions({
+		outputChannels:1,
+		inputChannels:1,
+		framesPerBuffer:parameters.framesPerBuffer,
+		sampleRate:parameters.sampleRate
+	});
 
-	// engine.addAudioCallback( processAudio );
+	engine.addAudioCallback( processAudio );
 
 	//////////listens for updates from frontend/////////////////////////////
 
@@ -303,6 +303,48 @@ function main() {
 	}
 
 });
+
+}
+
+function processAudio( inputBuffer ) {
+	var now = new Date()
+	handleRecording(inputBuffer[0])
+	//vars `now` and `last` ensures it runs at 30fps
+	if ((now-last)>parameters.frameRate){	
+
+		ampRaw = Math.abs(Math.max.apply(Math, inputBuffer[0]));
+		
+		//start of pitch analysis///////////////////////////////////////////		
+		pitch = detectPitchAMDF(inputBuffer[0]);
+		if (pitch==null){
+			pitch = 0
+		}
+		else{
+			pitch = mapValue(pitch, 0,1000,0,1)
+		}
+	
+		//end of pitch analysis///////////////////////////////////////////
+		
+		//mixes amplitude and frequency, while scaling it up by scaleFactor.
+		var ampPitchMix = (parameters.gain_for_amp * ampRaw + parameters.gain_for_pitch * pitch) * parameters.scaleFactor;
+		
+		//smooths values
+		//Note: smoothValue is a number between 0-1
+		smoothOut = parameters.smoothValue * smoothOut + (1 - parameters.smoothValue) * ampPitchMix;
+		
+		//writes values to arduino
+		setTarget(smoothOut);
+
+		//resets timer to impose a framerate
+		last = now;
+		
+		//broadcasts values to frontend
+		if (parameters.on) {
+				// broadcastValues();
+		}
+	}
+
+	return inputBuffer;
 
 }
 
