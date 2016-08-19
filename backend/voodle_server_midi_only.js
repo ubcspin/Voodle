@@ -29,10 +29,14 @@ var parameters = {
 	frameRate:34,
 	framesPerBuffer:400,
 	sampleRate:40000,
-	reverse:false,
+	reverse:true,
 	on:true,
 	minFrequency:5,
 	maxFrequency:1200,
+	p: 0.09,
+	i: 0.0,
+	d: 0.0,
+	r: 0.5,
 }
 
 var startRecTime = new Date();
@@ -68,6 +72,36 @@ var last = new Date() //imposes a framerate with `var now`
 
 var recording = false
 var name;
+
+//////// PID
+var i_term = 0
+var prev_error = 0
+var current = 0
+var target = 0
+
+function setTarget(val) {
+	target = val
+}
+
+function smooth() {
+	r_term = Math.random() - 0.5
+	error = (target + (parameters.r * r_term) ) - current
+	d_term = error - prev_error
+	i_term += error
+	
+	prev_error = error
+
+	change = ((parameters.p * error) - (parameters.d * d_term))
+
+	outpos = current + change
+	
+	current = outpos
+
+	return outpos
+}
+
+////////
+
 
 ///////////////////////////////////////////////////////////////////
 // Main
@@ -150,17 +184,17 @@ function main() {
 	//start of audio analysis//////////////////////////////////////
 	///////////////////////////////////////////////////////////////
 
-	// Create a new audio engine
-	var engine = coreAudio.createNewAudioEngine();
+	// // Create a new audio engine
+	// var engine = coreAudio.createNewAudioEngine();
 
-		engine.setOptions({
-		outputChannels:1,
-		inputChannels:1,
-		framesPerBuffer:parameters.framesPerBuffer,
-		sampleRate:parameters.sampleRate
-	});
+	// 	engine.setOptions({
+	// 	outputChannels:1,
+	// 	inputChannels:1,
+	// 	framesPerBuffer:parameters.framesPerBuffer,
+	// 	sampleRate:parameters.sampleRate
+	// });
 
-	engine.addAudioCallback( processAudio );
+	// engine.addAudioCallback( processAudio );
 
 	//////////listens for updates from frontend/////////////////////////////
 
@@ -327,50 +361,6 @@ function writeParams(){
 //		if you don't want the function to playback to your speakers,
 //		return an array of 0 (maybe).
 
-
-function processAudio( inputBuffer ) {
-	var now = new Date()
-	handleRecording(inputBuffer[0])
-	//vars `now` and `last` ensures it runs at 30fps
-	if ((now-last)>parameters.frameRate){	
-
-		ampRaw = Math.abs(Math.max.apply(Math, inputBuffer[0]));
-		
-		//start of pitch analysis///////////////////////////////////////////		
-		pitch = detectPitchAMDF(inputBuffer[0]);
-		if (pitch==null){
-			pitch = 0
-		}
-		else{
-			pitch = mapValue(pitch, 0,1000,0,1)
-		}
-	
-		//end of pitch analysis///////////////////////////////////////////
-		
-		//mixes amplitude and frequency, while scaling it up by scaleFactor.
-		var ampPitchMix = (parameters.gain_for_amp * ampRaw + parameters.gain_for_pitch * pitch) * parameters.scaleFactor;
-		
-		//smooths values
-		//Note: smoothValue is a number between 0-1
-		smoothOut = parameters.smoothValue * smoothOut + (1 - parameters.smoothValue) * ampPitchMix;
-		
-		//writes values to arduino
-		setArduino(smoothOut);
-
-		//resets timer to impose a framerate
-		last = now;
-		
-		//broadcasts values to frontend
-		if(parameters.on){
-				// broadcastValues();
-		}
-		}
-
-		return inputBuffer;
-
-}
-
-
 //// Midi functions
 
 var midiconfig = {
@@ -401,9 +391,26 @@ midi_fn_map = {
 	'smoothingFactor': dosmooth,
 	'scaleFactor' : doscale,
 	'maxFrequency': domaxhz,
-	'minFrequency': dominhz
+	'minFrequency': dominhz,
+	'position': dopos,
+	'random': dorandom,
+	'p': dop,
+	'd': dod
 }
 
+function dop(val) {
+	parameters.p = val
+}
+function dod(val) {
+	parameters.d = val
+}
+function dorandom(val) {
+	parameters.r = val
+}
+
+function dopos(val) {
+	setTarget(val)
+}
 function domix(val) {
 	parameters.gain_for_amp = 1 - val
 	parameters.gain_for_pitch = val
@@ -428,6 +435,10 @@ function updateMidi() {
 	getmidi('scaleFactor');
 	getmidi('minFrequency');
 	getmidi('maxFrequency');
+	getmidi('position');
+	getmidi('random');
+	getmidi('p');
+	getmidi('d');
 	console.log(parameters)
 }
 
@@ -435,19 +446,19 @@ function getmidi(tag) {
 	var mapping = {
 		'mix': {
 			'area': midi_area_map_reverse['knobs_buttons'], 
-			'controller': 71,
+			'controller': 71, // top left
 			'scale': [0,127],
 			'target_scale':[0,1]
 		},
 		'smoothingFactor': {
-			'area': midi_area_map_reverse['pitch'], 
-			'controller': 0,
+			'area': midi_area_map_reverse['modulation'], 
+			'controller': 1,
 			'scale': [0,127],
 			'target_scale':[0,1]
 		},
 		'scaleFactor': {
-			'area': midi_area_map_reverse['modulation'], 
-			'controller': 1,
+			'area': midi_area_map_reverse['knobs_buttons'], 
+			'controller': 71, //second from top left
 			'scale': [0,127],
 			'target_scale':[0,5]
 		},
@@ -462,7 +473,35 @@ function getmidi(tag) {
 			'controller': 93,
 			'scale': [0,127],
 			'target_scale':[5,1200]			
-		}
+		},
+		'position': {
+			'area': midi_area_map_reverse['pitch'], 
+			'controller': 0,
+			'scale': [0,127],
+			'target_scale':[0,1]			
+		},
+		'random': {
+			'area': midi_area_map_reverse['modulation'], 
+			'controller': 1,
+			'scale': [0,127],
+			'target_scale':[0,1.0]
+		},
+		'p': {
+			'area': midi_area_map_reverse['knobs_buttons'], 
+			'controller': 7, //top right
+			'scale': [0,127],
+			'target_scale':[0,0.18]
+		},
+
+		'd': {
+			'area': midi_area_map_reverse['knobs_buttons'], 
+			'controller': 10, //bottom right
+			'scale': [0,127],
+			'target_scale':[0,1]
+		},
+
+
+
 	}
 	var i = mapping[tag]['area']
 	var j = mapping[tag]['controller']
@@ -485,7 +524,18 @@ function getmidi(tag) {
 //Arduino communication code/////////////////////////////////
 ////////////////////////////////////////////////////////////
 
+function clamp(v,mn,mx) {
+	if (v > mx) {
+		return mx;
+	}
+	if (v < mn) {
+		return mn
+	}
+	return v
+}
 function setArduino(sm) {
+	sm = clamp(sm,0,1)
+	// console.log('sending arduino to ' + sm)
 	// if (servoCreated){
 	// 	if (reverse){
 	// 	//maps the audio input to the servo value range, and calculates the difference
@@ -497,35 +547,44 @@ function setArduino(sm) {
 	// 			servo.to(parameters.servoMax - mapValue(sm, 0, 1, parameters.servoMin, parameters.servoMax));
 	// 		}
 	// };
-
+	var setpoint = 0
 	if (servoCreated){
 		if (parameters.reverse){
-		//maps the audio input to the servo value range, and calculates the difference
-		//so that it moves upwards with increased amplitude.
-			servo.to(parameters.servoMax - mapValue(sm, 0, 1, parameters.servoMin, parameters.servoMax));
+			//maps the audio input to the servo value range, and calculates the difference
+			//so that it moves upwards with increased amplitude.
+			setpoint = parameters.servoMax - mapValue(sm, 0, 1, parameters.servoMin, parameters.servoMax)
 		}
 		else {
-				servo.to(mapValue(sm, 0, 1, parameters.servoMin, parameters.servoMax));
-			}
-	};
-	if(motorCreated){
-		if (parameters.reverse){
-			motor.reverse(mapValue(sm, 0, 1, parameters.motorMinSpeed, parameters.motorMaxSpeed));
+			setpoint = mapValue(sm, 0, 1, parameters.servoMin, parameters.servoMax)
 		}
-		else {
-			motor.forward(mapValue(sm, 0, 1, parameters.motorMinSpeed, parameters.motorMaxSpeed));
-			}
+		servo.to(clamp(setpoint, parameters.servoMin, parameters.servoMax))
 	};
-	if(ledCreated){
-		n = mapValue(sm, 0, 1, 0, 255)
-	    led.color(n,0,n);
-  	};
+	// if(motorCreated){
+	// 	if (parameters.reverse){
+	// 		motor.reverse(mapValue(sm, 0, 1, parameters.motorMinSpeed, parameters.motorMaxSpeed));
+	// 	}
+	// 	else {
+	// 		motor.forward(mapValue(sm, 0, 1, parameters.motorMinSpeed, parameters.motorMaxSpeed));
+	// 		}
+	// };
+	// if(ledCreated){
+	// 	n = mapValue(sm, 0, 1, 0, 255)
+	//     led.color(n,0,n);
+ //  	};
 };
 
 function mapValue(value, minIn, maxIn, minOut, maxOut){
 	return (value / (maxIn - minIn) )*(maxOut - minOut);
 }
 
+function loop() {
+	setInterval(function() {
+		setArduino(smooth())
+	}, 10)
+		
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // RUN MAIN
 main()
+loop()
