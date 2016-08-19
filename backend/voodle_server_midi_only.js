@@ -27,8 +27,8 @@ var parameters = {
 	motorMinSpeed:50,
 	motorMaxSpeed:255,
 	frameRate:34,
-	framesPerBuffer:400,
-	sampleRate:40000,
+	framesPerBuffer:10,
+	sampleRate:1000,
 	reverse:true,
 	on:true,
 	minFrequency:5,
@@ -333,7 +333,7 @@ function processAudio( inputBuffer ) {
 		smoothOut = parameters.smoothValue * smoothOut + (1 - parameters.smoothValue) * ampPitchMix;
 		
 		//writes values to arduino
-		setTarget(smoothOut);
+		setTarget(ampPitchMix);
 
 		//resets timer to impose a framerate
 		last = now;
@@ -451,7 +451,7 @@ function dorandom(val) {
 }
 
 function dopos(val) {
-	setTarget(val)
+	//setTarget(val)
 }
 function domix(val) {
 	parameters.gain_for_amp = 1 - val
@@ -465,9 +465,11 @@ function doscale(val) {
 }
 function domaxhz(val) {
 	parameters.maxFrequency = val
+	detectPitchAMDF.maxFrequency = val
 }
 function dominhz(val) {
 	parameters.minFrequency = val
+	detectPitchAMDF.minFrequency = val
 }
 
 
@@ -500,19 +502,19 @@ function getmidi(tag) {
 		},
 		'scaleFactor': {
 			'area': midi_area_map_reverse['knobs_buttons'], 
-			'controller': 71, //second from top left
+			'controller': 91, //second from top left
 			'scale': [0,127],
 			'target_scale':[0,5]
 		},
 		'minFrequency': {
 			'area': midi_area_map_reverse['knobs_buttons'], 
-			'controller': 91,
+			'controller': 93,
 			'scale': [0,127],
 			'target_scale':[5,1200]			
 		},
 		'maxFrequency': {
 			'area': midi_area_map_reverse['knobs_buttons'], 
-			'controller': 93,
+			'controller': 5,
 			'scale': [0,127],
 			'target_scale':[5,1200]			
 		},
