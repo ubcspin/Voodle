@@ -7,6 +7,7 @@ var io = require('socket.io')(server);
 var fs = require('fs');
 var five = require('johnny-five');
 var midi = require('midi');
+var colors = require('colors')
 
 // Local requires
 var IoHandler = require('./iohandler.js');
@@ -17,26 +18,27 @@ var recHandler = new Recorder();
 
 // Globals
 
-var parameters = {
-	smoothValue: 0.8, 
-	gain_for_amp: 0.4,
-	gain_for_pitch: 0.6,
-	scaleFactor: 3,
+var parameters = { 
+	smoothValue: 0,
+	gain_for_amp: 0.19685039370078738,
+	gain_for_pitch: 0.8031496062992126,
+	scaleFactor: 1.9291338582677164,
 	servoMax: 75,
 	servoMin: 10,
-	motorMinSpeed:50,
-	motorMaxSpeed:255,
-	frameRate:34,
-	framesPerBuffer:10,
-	sampleRate:1000,
-	reverse:true,
-	on:true,
-	minFrequency:5,
-	maxFrequency:1200,
-	p: 0.09,
-	i: 0.0,
-	d: 0.0,
-	r: 0.5,
+	motorMinSpeed: 50,
+	motorMaxSpeed: 255,
+	frameRate: 34,
+	framesPerBuffer: 10,
+	sampleRate: 1000,
+	reverse: true,
+	on: true,
+	minFrequency: 0,
+	maxFrequency: 0,
+	p: 0.18,
+	i: 0,
+	d: 0.031496062992125984,
+	r: 0,
+	wheelControl: false 
 }
 
 var startRecTime = new Date();
@@ -78,6 +80,8 @@ var i_term = 0
 var prev_error = 0
 var current = 0
 var target = 0
+
+
 
 function setTarget(val) {
 	target = val
@@ -156,10 +160,15 @@ function main() {
 		var value = message[2];
 
 		midiconfig[area][controller] = value;
-
+		if ((area == midi_area_map_reverse['pads']) && (controller == 49)) {
+			doreverse(value);
+		}
+		if ((area == midi_area_map_reverse['pads']) && (controller == 42)) {
+			doWheelChange(value);
+		}
 		updateMidi()
 
-		console.log('m:' + message + ' d:' + deltaTime);
+		// console.log('m:' + message + ' d:' + deltaTime);
 
 	});
 
@@ -313,6 +322,13 @@ function processAudio( inputBuffer ) {
 	if ((now-last)>parameters.frameRate){	
 
 		ampRaw = Math.abs(Math.max.apply(Math, inputBuffer[0]));
+
+			detectPitchAMDF = new pitchFinder.AMDF({
+		sampleRate:parameters.sampleRate,
+		minFrequency:parameters.minFrequency,
+		maxFrequency:parameters.maxFrequency
+	});
+
 		
 		//start of pitch analysis///////////////////////////////////////////		
 		pitch = detectPitchAMDF(inputBuffer[0]);
@@ -333,8 +349,9 @@ function processAudio( inputBuffer ) {
 		smoothOut = parameters.smoothValue * smoothOut + (1 - parameters.smoothValue) * ampPitchMix;
 		
 		//writes values to arduino
-		setTarget(ampPitchMix);
-
+		if(!parameters.wheelControl){
+				setTarget(ampPitchMix);
+		}
 		//resets timer to impose a framerate
 		last = now;
 		
@@ -405,12 +422,19 @@ function writeParams(){
 
 //// Midi functions
 
-var midiconfig = {
-	224:{0:0},
-	176:{1:0},
-	144:{0:0},
-	153:{0:0}
-}
+var midiconfig = { 
+	144: { 0: 0 },
+	153: { 0: 0, 42: 0, 49: 0 },
+  176:
+   { 1: 0,
+     5: 108,
+     7: 126,
+     10: 4,
+     71: 101,
+     84: 27,
+     91: 51,
+     93: 10 },
+  224: { 0: 64, 127: 127 } }
 
 midi_area_map = {
 	224:'pitch bend',
@@ -437,7 +461,8 @@ midi_fn_map = {
 	'position': dopos,
 	'random': dorandom,
 	'p': dop,
-	'd': dod
+	'd': dod,
+	
 }
 
 function dop(val) {
@@ -451,7 +476,9 @@ function dorandom(val) {
 }
 
 function dopos(val) {
-	//setTarget(val)
+	if (parameters.wheelControl){
+		setTarget(val)
+	}
 }
 function domix(val) {
 	parameters.gain_for_amp = 1 - val
@@ -472,7 +499,28 @@ function dominhz(val) {
 	detectPitchAMDF.minFrequency = val
 }
 
+function doreverse(val){
+	if (val == 0) {
+		// console.log('in doreverse', parameters.reverse,'\n---------')
+		parameters.reverse = !parameters.reverse;
+		// console.log('changed val: ', parameters.reverse)
+	}
+}
 
+function pad(str,n,chr) {
+	var k = n - str.length
+	for (var i = 0; i< k; i++) {
+		str = chr + str
+	}
+	return str
+ }
+
+function doWheelChange(val){
+	if (val == 0) {
+		// console.log('switching control setup')
+		parameters.wheelControl = !parameters.wheelControl
+	}
+}
 function updateMidi() {
 	getmidi('mix');
 	getmidi('smoothingFactor');
@@ -483,9 +531,31 @@ function updateMidi() {
 	getmidi('random');
 	getmidi('p');
 	getmidi('d');
-	console.log(parameters)
-}
 
+	speciallog(parameters)
+	
+}
+function speciallog(p) {
+	console.log('\033[2J');
+	var keys = Object.keys(p)
+	var stopwords = {'frameRate':0,
+					 'servoMax':0,
+					 'servoMin':0,
+					 'smoothValue':0,
+					 'motorMinSpeed':0,
+					 'motorMaxSpeed':0,
+					 'framesPerBuffer':0,
+					 'sampleRate': 0,
+					 'on': 0,
+					}
+	for (var i = 0; i < keys.length; i++) {
+		if (!(keys[i] in stopwords)) {
+			console.log(pad(keys[i],20,' '), p[keys[i]].toString().bold);
+		}
+		
+	}
+
+}
 function getmidi(tag) {
 	var mapping = {
 		'mix': {
@@ -543,6 +613,12 @@ function getmidi(tag) {
 			'scale': [0,127],
 			'target_scale':[0,1]
 		},
+		'reverse': {
+			'area': 153, //pads
+			'controller': 49, //top right
+			'scale': [0,127],
+			'target_scale':[0,0.18]
+		},
 
 
 
@@ -578,6 +654,7 @@ function clamp(v,mn,mx) {
 	return v
 }
 function setArduino(sm) {
+
 	sm = clamp(sm,0,1)
 	// console.log('sending arduino to ' + sm)
 	// if (servoCreated){
