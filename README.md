@@ -18,16 +18,22 @@ Vocal prototyping for physical user interfaces.
 
 		* 8. Navigate into your `node-core-audio` folder and run `node-gyp rebuild`. It is possible that you need to install node-gyp by typing (perhaps as sudo) `npm install -g node-gyp`.
 
+		Note 0: Windows users may need to install Python 2.7 and msvs:  
+		type `npm i -g --production windows-build-tools` as administrator. This should install the requisite packages.  
+		- You will also need to set your msvs version number. Say you've installed 2015. Type `npm config set msvs_version 2015`.
+			- Alternatively, you can specify your msvs version during runtime. `cd` into node-core-audio and type `node-gyp rebuild --msvs_version=2015`.	
 
 		Note 1: if you are running Python >3:
 		make sure Python < 3 && >= 2.7 is installed
 			run `node-gyp rebuild --python=python2.7`
 
-		Note 2: if you are on a mac, MAY need to install the 'nan' package:
+		Note 2: You MAY need to install the 'nan' package:
 			`cd` to `node-core-audio`
 			`npm i nan`
 
+
 		Note 3: If you are still having node-gyp problems ensure that you have the requisite dependencies outlined here: https://www.npmjs.com/package/node-gyp .
+		
 	* **Linux users:**
 		* Clone the git repository `https://github.com/ZECTBynmo/node-core-audio.git` into your `node-modules` folder.
 		* Navigate into your `node-core-audio` folder and replace `portaudio` with this source `http://www.portaudio.com/archives/pa_stable_v19_20140130.tgz`.

@@ -7,7 +7,8 @@ var io = require('socket.io')(server);
 var fs = require('fs');
 var five = require('johnny-five');
 var midi = require('midi');
-var colors = require('colors')
+var colors = require('colors');
+
 
 // Local requires
 var IoHandler = require('./iohandler.js');
@@ -19,13 +20,13 @@ var recHandler = new Recorder();
 // Globals
 
 var parameters = {
-	smoothValue: 0,
+	smoothValue: 0.80,
 	gain_for_amp: 0.19685039370078738,
 	gain_for_pitch: 0.8031496062992126,
 	scaleFactor: 1.9291338582677164,
-	servoMax: 130,
-	servoMin: 30,
-	motorMinSpeed: 60,
+	servoMax: 75,
+	servoMin: 10,
+	motorMinSpeed: 70,
 	motorMaxSpeed: 255,
 	frameRate: 34,
 	framesPerBuffer: 10,
@@ -34,12 +35,11 @@ var parameters = {
 	on: true,
 	minFrequency: 0,
 	maxFrequency: 0,
-	p: 0.18,
+	p: 0.5,
 	i: 0,
 	d: 0.031496062992125984,
 	r: 0,
-	wheelControl: false,
-	currentServoPos: 0,
+	wheelControl: false
 }
 
 var startRecTime = new Date();
@@ -48,8 +48,8 @@ var startRecTimeString = Date.now() // string like 123214312341234
 
 var led;
 var ledCreated = false;
-var servoMode = true;
-var motorMode = false;
+var servoMode = false;
+var motorMode = true;
 var ledMode = false;
 
 var motor;
@@ -293,11 +293,9 @@ function main() {
 	  // the Repl instance's context;
 	  // allows direct command line access
 		board.repl.inject({
-	    motor: motor,
-			parameters: parameters
-			});
+	    motor: motor
+	    });
 	    motorCreated=true;
-
 	};
 	if (ledMode){
 		//constructs an RGB LED
@@ -312,7 +310,7 @@ function main() {
 	  this.repl.inject({
 	    led: led
 	  });
-	  ledCreated =true;
+	  ledCreated = true;
 	}
 
 });
@@ -327,7 +325,7 @@ function processAudio( inputBuffer ) {
 
 		ampRaw = Math.abs(Math.max.apply(Math, inputBuffer[0]));
 
-			detectPitchAMDF = new pitchFinder.AMDF({
+		detectPitchAMDF = new pitchFinder.AMDF({
 		sampleRate:parameters.sampleRate,
 		minFrequency:parameters.minFrequency,
 		maxFrequency:parameters.maxFrequency
@@ -346,15 +344,22 @@ function processAudio( inputBuffer ) {
 		//end of pitch analysis///////////////////////////////////////////
 
 		//mixes amplitude and frequency, while scaling it up by scaleFactor.
-		var ampPitchMix = (parameters.gain_for_amp * ampRaw + parameters.gain_for_pitch * pitch) * parameters.scaleFactor;
+		// var ampPitchMix = (parameters.gain_for_amp * ampRaw + parameters.gain_for_pitch * pitch) * parameters.scaleFactor;
 
+		//raises 2^x for log growth
+		var ampPitchMix = Math.pow(2,((parameters.gain_for_amp * ampRaw + parameters.gain_for_pitch * pitch)*10))
+		ampPitchMix = mapValue(ampPitchMix,0,16,0,1)
+
+
+
+		// console.log("ampPitchMix val: ", ampPitchMix);
 		//smooths values
 		//Note: smoothValue is a number between 0-1
 		smoothOut = parameters.smoothValue * smoothOut + (1 - parameters.smoothValue) * ampPitchMix;
 
 		//writes values to arduino
 		if(!parameters.wheelControl){
-				setTarget(ampPitchMix);
+					setTarget(ampPitchMix);
 		}
 		//resets timer to impose a framerate
 		last = now;
@@ -503,7 +508,7 @@ var mapping = {
 		'area': midi_area_map_reverse['knobs_buttons'],
 		'controller': 7, //top right
 		'scale': [0,127],
-		'target_scale':[0,0.18]
+		'target_scale':[0.10,0.99]
 	},
 
 	'd': {
@@ -677,6 +682,7 @@ function clamp(v,mn,mx) {
 function setArduino(sm) {
 
 	sm = clamp(sm,0,1)
+
 	// console.log('sending arduino to ' + sm)
 	// if (servoCreated){
 	// 	if (reverse){
@@ -695,22 +701,26 @@ function setArduino(sm) {
 			//maps the audio input to the servo value range, and calculates the difference
 			//so that it moves upwards with increased amplitude.
 			setpoint = parameters.servoMax - mapValue(sm, 0, 1, parameters.servoMin, parameters.servoMax)
-
-			parameters.currentServoPos = setpoint;
 		}
 		else {
 			setpoint = mapValue(sm, 0, 1, parameters.servoMin, parameters.servoMax)
-
-			parameters.currentServoPos = setpoint;
 		}
 		servo.to(clamp(setpoint, parameters.servoMin, parameters.servoMax))
 	};
 	if(motorCreated){
+
 		if (parameters.reverse){
+
 			motor.reverse(mapValue(sm, 0, 1, parameters.motorMinSpeed, parameters.motorMaxSpeed));
+			// console.log(mapValue(sm, 0, 1, parameters.motorMinSpeed, parameters.motorMaxSpeed));
+
+			//console.log(sm)
+
 		}
 		else {
-			motor.forward(mapValue(sm, 0, 1, parameters.motorMinSpeed, parameters.motorMaxSpeed));
+
+			motor.forward(clamp(mapValue(sm, 0, 1, parameters.motorMinSpeed-30, parameters.motorMaxSpeed+100	),50,parameters.motorMaxSpeed));
+
 			}
 	};
 	// if(ledCreated){
@@ -720,14 +730,20 @@ function setArduino(sm) {
 };
 
 function mapValue(value, minIn, maxIn, minOut, maxOut){
-	return ((value / (maxIn - minIn) )*(maxOut - minOut))+minOut;
+	return( clamp(
+						(((value / (maxIn - minIn) )*(maxOut - minOut))+minOut),
+						minOut,
+						maxOut
+					)
+				)
+
 }
 
 function loop() {
+
 	setInterval(function() {
 		setArduino(smooth())
-	}, 10)
-
+	}, 50)
 }
 
 function drawBar(current,minValue,maxValue) {

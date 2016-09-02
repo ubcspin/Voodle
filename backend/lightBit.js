@@ -30,7 +30,7 @@ var parameters = {
 	frameRate: 34,
 	framesPerBuffer: 10,
 	sampleRate: 1000,
-	reverse: false,
+	reverse: true,
 	on: true,
 	minFrequency: 0,
 	maxFrequency: 0,
@@ -48,9 +48,9 @@ var startRecTimeString = Date.now() // string like 123214312341234
 
 var led;
 var ledCreated = false;
-var servoMode = true;
+var servoMode = false;
 var motorMode = false;
-var ledMode = false;
+var ledMode = true;
 
 var motor;
 var motorCreated = false;
@@ -81,6 +81,8 @@ var i_term = 0
 var prev_error = 0
 var current = 0
 var target = 0
+
+
 
 
 
@@ -346,8 +348,8 @@ function processAudio( inputBuffer ) {
 		//end of pitch analysis///////////////////////////////////////////
 
 		//mixes amplitude and frequency, while scaling it up by scaleFactor.
-		var ampPitchMix = (parameters.gain_for_amp * ampRaw + parameters.gain_for_pitch * pitch) * parameters.scaleFactor;
-
+		var ampPitchMix = Math.pow(2,((parameters.gain_for_amp * ampRaw + parameters.gain_for_pitch * pitch)*10))
+		ampPitchMix = mapValue(ampPitchMix,0,16,0,1)
 		//smooths values
 		//Note: smoothValue is a number between 0-1
 		smoothOut = parameters.smoothValue * smoothOut + (1 - parameters.smoothValue) * ampPitchMix;
@@ -503,7 +505,7 @@ var mapping = {
 		'area': midi_area_map_reverse['knobs_buttons'],
 		'controller': 7, //top right
 		'scale': [0,127],
-		'target_scale':[0,0.18]
+		'target_scale':[0,1]
 	},
 
 	'd': {
@@ -518,10 +520,8 @@ var mapping = {
 		'scale': [0,127],
 		'target_scale':[0,0.18]
 	},
-
-
-
 }
+
 
 midi_fn_map = {
 	'mix': domix,
@@ -619,27 +619,30 @@ function speciallog(p) {
 					 'sampleRate': 0,
 					 'on': 0,
 					}
-					console.log(pad("amp bias",20,' '),drawSliderBar(p[keys[2]],0,1),' pitch bias' )
-					for (var i = 0; i < keys.length; i++) {
+	console.log(pad("amp bias",20,' '),drawSliderBar(p[keys[2]],0,1),' pitch bias' )
+	for (var i = 0; i < keys.length; i++) {
 
 
-						if (!(keys[i] in stopwords)) {
-							if(keys[i]=="scaleFactor"){
+		if (!(keys[i] in stopwords)) {
+			if(keys[i]=="scaleFactor"){
 
-								 console.log(pad(keys[i],20,' '), drawBar(p[keys[i]],mapping.scaleFactor.target_scale[0],mapping.scaleFactor.target_scale[1]));
-							}
-							else if(keys[i]=="p"){
-								 console.log(pad(keys[i],20,' '), drawBar(p[keys[i]],mapping.p.target_scale[0],mapping.p.target_scale[1]));
-							}
-							else if(keys[i]=="d"){
-								 console.log(pad(keys[i],20,' '), drawBar(p[keys[i]],mapping.d.target_scale[0],mapping.d.target_scale[1]));
-							}
-							else{
-							console.log(pad(keys[i],20,' '), p[keys[i]].toString().bold);
-							}
-						}
+				 console.log(pad(keys[i],20,' '), drawBar(p[keys[i]],mapping.scaleFactor.target_scale[0],mapping.scaleFactor.target_scale[1]));
+			}
+			else if(keys[i]=="p"){
+				 console.log(pad(keys[i],20,' '), drawBar(p[keys[i]],mapping.p.target_scale[0],mapping.p.target_scale[1]));
+			}
+			else if(keys[i]=="d"){
+				 console.log(pad(keys[i],20,' '), drawBar(p[keys[i]],mapping.d.target_scale[0],mapping.d.target_scale[1]));
+			}
+			else{
+			console.log(pad(keys[i],20,' '), p[keys[i]].toString().bold);
+			}
+		}
 
-					}
+	}
+
+
+			// console.log(pad(keys[3],20,' '))
 
 }
 function getmidi(tag) {
@@ -713,10 +716,10 @@ function setArduino(sm) {
 			motor.forward(mapValue(sm, 0, 1, parameters.motorMinSpeed, parameters.motorMaxSpeed));
 			}
 	};
-	// if(ledCreated){
-	// 	n = mapValue(sm, 0, 1, 0, 255)
-	//     led.color(n,0,n);
- //  	};
+	if(ledCreated){
+		var chVal = mapValue(sm, 0, 1, 0, 255)
+	    led.color(chVal,chVal,chVal);
+  	};
 };
 
 function mapValue(value, minIn, maxIn, minOut, maxOut){
@@ -768,7 +771,6 @@ function drawSliderBar(current,minValue,maxValue) {
 	return bar
 
 }
-
 ///////////////////////////////////////////////////////////////////////////
 // RUN MAIN
 main()

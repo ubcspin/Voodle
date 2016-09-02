@@ -18,7 +18,7 @@ var recHandler = new Recorder();
 // Globals
 
 var parameters = {
-	smoothValue: 0.8, 
+	smoothValue: 0.8,
 	gain_for_amp: 0.4,
 	gain_for_pitch: 0.6,
 	scaleFactor: 3,
@@ -67,8 +67,8 @@ var startRecTimeString = Date.now() // string like 123214312341234
 
 var led;
 var ledCreated = false;
-var servoMode = true;
-var motorMode = false;
+var servoMode = false;
+var motorMode = true;
 var ledMode = false;
 
 var motor;
@@ -100,7 +100,7 @@ var name;
 function main() {
 	//set up server
 	server.listen(2000);
-	
+
 	app.use(express.static(__dirname + '/js'));
 
 	app.get('/', function (req, res) {
@@ -142,7 +142,7 @@ function main() {
 		// m:area,controller,value d:velocity
 		// note that controller is NOT unique, but (area,controller) is
 		// example: keyboard key five has controller == 5, and knob 5 has controller == 5
-		
+
 		var area = message[0]
 		var controller = message[1];
 		var value = message[2];
@@ -223,7 +223,7 @@ function main() {
 				console.log("\nnew min motor speed: "+ parameters.motorMinSpeed)
 				parameters.motorMinSpeed = data.motorMin;
 			}
-	 
+
 	  });
 	  	socket.on("startRec",function(){
 	  		startRecording()
@@ -240,7 +240,7 @@ function main() {
 	  	socket.on("exportParams", function(){
 	  		var time = new Date().getTime();
 	  		bigFatParametersList = "";
-	  		
+
 	  		for (key in parameters) {
 	  			console.log(key);
 	  			console.log(parameters[key])
@@ -276,7 +276,7 @@ function main() {
 		board.repl.inject({
 	    motor: motor
 	    });
-	    motorCreated=true;	
+	    motorCreated=true;
 	};
 	if (ledMode){
 		//constructs an RGB LED
@@ -329,7 +329,7 @@ function startRecording(){
 function stopRecording(){
 	recording = false;
 	writeParams();
-	
+
 }
 
 function writeParams(){
@@ -358,11 +358,11 @@ function processAudio( inputBuffer ) {
 	var now = new Date()
 	handleRecording(inputBuffer[0])
 	//vars `now` and `last` ensures it runs at 30fps
-	if ((now-last)>parameters.frameRate){	
+	if ((now-last)>parameters.frameRate){
 
 		ampRaw = Math.abs(Math.max.apply(Math, inputBuffer[0]));
-		
-		//start of pitch analysis///////////////////////////////////////////		
+
+		//start of pitch analysis///////////////////////////////////////////
 		pitch = detectPitchAMDF(inputBuffer[0]);
 		if (pitch==null){
 			pitch = 0
@@ -370,22 +370,22 @@ function processAudio( inputBuffer ) {
 		else{
 			pitch = mapValue(pitch, 0,1000,0,1)
 		}
-	
+
 		//end of pitch analysis///////////////////////////////////////////
-		
+
 		//mixes amplitude and frequency, while scaling it up by scaleFactor.
 		var ampPitchMix = (parameters.gain_for_amp * ampRaw + parameters.gain_for_pitch * pitch) * parameters.scaleFactor;
-		
+
 		//smooths values
 		//Note: smoothValue is a number between 0-1
 		smoothOut = parameters.smoothValue * smoothOut + (1 - parameters.smoothValue) * ampPitchMix;
-		
+
 		//writes values to arduino
 		setArduino(smoothOut);
 
 		//resets timer to impose a framerate
 		last = now;
-		
+
 		//broadcasts values to frontend
 		if(parameters.on){
 				broadcastValues();
@@ -397,7 +397,7 @@ function processAudio( inputBuffer ) {
 }
 
 // var parameters = {
-// 	smoothValue: 0.8, 
+// 	smoothValue: 0.8,
 // 	gain_for_amp: 0.4,
 // 	gain_for_pitch: 0.6,
 // 	scaleFactor: 3,
@@ -436,19 +436,19 @@ function updateMidi() {
 function getmidi(tag) {
 	var mapping = {
 		'mix': {
-			'area': midi_area_map_reverse['knobs_buttons'], 
+			'area': midi_area_map_reverse['knobs_buttons'],
 			'controller': 71,
 			'scale': [0,127],
 			'target_scale':[0,1]
 		},
 		'smoothingFactor': {
-			'area': midi_area_map_reverse['pitch'], 
+			'area': midi_area_map_reverse['pitch'],
 			'controller': 0,
 			'scale': [0,127],
 			'target_scale':[0,1]
 		},
 		'scaleFactor': {
-			'area': midi_area_map_reverse['modulation'], 
+			'area': midi_area_map_reverse['modulation'],
 			'controller': 1,
 			'scale': [0,127],
 			'target_scale':[0,5]
@@ -499,9 +499,9 @@ function broadcastValues() {
 		// iohandle.broadcastPitch(pitchGain);
 		// iohandle.broadcastMix(smoothOut);
 		// iohandle.broadcastAmpGain(parameters.gain_for_amp)
-		// iohandle.broadcastPitchGain(parameters.gain_for_pitch) 
+		// iohandle.broadcastPitchGain(parameters.gain_for_pitch)
 		// iohandle.broadcastScale(parameters.scaleFactor);
-		
+
 }
 
 
