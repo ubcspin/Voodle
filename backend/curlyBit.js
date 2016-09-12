@@ -634,6 +634,9 @@ function speciallog(p) {
 							else if(keys[i]=="d"){
 								 console.log(pad(keys[i],20,' '), drawBar(p[keys[i]],mapping.d.target_scale[0],mapping.d.target_scale[1]));
 							}
+							else if(keys[i]=="r"){
+				 				  console.log(pad(keys[i],20,' '), drawBar(p[keys[i]],mapping.random.target_scale[0],mapping.random.target_scale[1]));
+							}
 							else{
 							console.log(pad(keys[i],20,' '), p[keys[i]].toString().bold);
 							}

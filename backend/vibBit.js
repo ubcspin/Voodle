@@ -26,7 +26,7 @@ var parameters = {
 	scaleFactor: 1.9291338582677164,
 	servoMax: 75,
 	servoMin: 10,
-	motorMinSpeed: 70,
+	motorMinSpeed: 0,
 	motorMaxSpeed: 255,
 	frameRate: 34,
 	framesPerBuffer: 10,
@@ -639,6 +639,9 @@ function speciallog(p) {
 							else if(keys[i]=="d"){
 								 console.log(pad(keys[i],20,' '), drawBar(p[keys[i]],mapping.d.target_scale[0],mapping.d.target_scale[1]));
 							}
+							else if(keys[i]=="r"){
+								 console.log(pad(keys[i],20,' '), drawBar(p[keys[i]],mapping.random.target_scale[0],mapping.random.target_scale[1]));
+							}
 							else{
 							console.log(pad(keys[i],20,' '), p[keys[i]].toString().bold);
 							}
@@ -719,7 +722,7 @@ function setArduino(sm) {
 		}
 		else {
 
-			motor.forward(clamp(mapValue(sm, 0, 1, parameters.motorMinSpeed-30, parameters.motorMaxSpeed+100	),50,parameters.motorMaxSpeed));
+			motor.forward(clamp(mapValue(sm, 0, 1, parameters.motorMinSpeed, parameters.motorMaxSpeed	),50,parameters.motorMaxSpeed));
 
 			}
 	};
