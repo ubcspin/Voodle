@@ -60,7 +60,7 @@ Vocal prototyping for physical user interfaces.
 
 **Windows Build tools**
 
-type `npm i -g --production windows-build-tools` as administrator. This should install the requisite packages.  
+type `npm i -g --production windows-build-tools` as administrator (i.e. in Powershell). This should install the requisite packages.  
 
 You will also need to set your msvs version number. Say you've installed 2015. Type `npm config set msvs_version 2015`.
 
