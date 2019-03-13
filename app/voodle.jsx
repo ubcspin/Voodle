@@ -1,6 +1,6 @@
 import React from 'react';
 var Settings = require("./settings.jsx")
-var io = require('socket.io-client/socket.io');
+var io = require('socket.io-client/lib/socket.js');
 
 
 var Voodle = React.createClass({

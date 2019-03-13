@@ -38,7 +38,7 @@ var parameters = {
 	i: 0,
 	d: 0.031496062992125984,
 	r: 0,
-	wheelControl: false,
+	wheelControl: true,
 	currentServoPos: 0,
 }
 
@@ -167,9 +167,17 @@ function main() {
 		if ((area == midi_area_map_reverse['pads']) && (controller == 42)) {
 			doWheelChange(value);
 		}
+		if ((area == midi_area_map_reverse['knobs_buttons']) && (controller == 25)){
+			if (!recording){
+				startRecording();
+			}
+			else {
+				stopRecording();
+			}
+		}
 		updateMidi()
 
-		// console.log('m:' + message + ' d:' + deltaTime);
+		 console.log('m:' + message + ' d:' + deltaTime);
 
 	});
 
@@ -381,7 +389,7 @@ function writeToAudioBufferFile(name, buffer) {
 	buffer.forEach(function(f){
 		out = out +'0,' + f + '\n'
 	})
-	fs.appendFile("C:\\Users\\David\\Documents\\CuddleBitV2\\recordings\\"+name+"_recording.csv", out, function(err){
+	fs.appendFile("/Users/andrewmoore/Documents/Voodle-record/"+name+"_recording.csv", out, function(err){
 		if (err){
 			return console.log(err);
 		}
@@ -404,11 +412,12 @@ function stopRecording(){
 }
 
 function writeParams(){
-	fs.appendFile("C:\\Users\\David\\Documents\\CuddleBitV2\\recordings\\" + name + "_parameters.json", JSON.stringify(parameters), function(err){
+	var url = "/Users/andrewmoore/Documents/Voodle-record/" + name + "_parameters.json";
+	fs.appendFile(url, JSON.stringify(parameters), function(err){
 	if (err){
 		return console.log(err);
 	}
-	console.log("wrote params file!")
+	console.log("wrote params file to" + url)
 	})
 }
 
