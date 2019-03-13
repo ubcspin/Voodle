@@ -82,6 +82,8 @@ var prev_error = 0
 var current = 0
 var target = 0
 
+var positionBuffer = [];
+
 
 
 function setTarget(val) {
@@ -715,7 +717,10 @@ function setArduino(sm) {
 
 			parameters.currentServoPos = setpoint;
 		}
-		servo.to(clamp(setpoint, parameters.servoMin, parameters.servoMax))
+
+		servoToPoint = clamp(setpoint, parameters.servoMin, parameters.servoMax);
+		//servo.to(clamp(setpoint, parameters.servoMin, parameters.servoMax))
+		handleLogPosition(servoToPoint);
 	};
 	if(motorCreated){
 		if (parameters.reverse){
@@ -730,6 +735,18 @@ function setArduino(sm) {
 	//     led.color(n,0,n);
  //  	};
 };
+
+function handleLogPosition(pos) {
+	if(positionBuffer.length < 1000) {
+			positionBuffer.push(pos:pos, t:Date.now());
+			positionBuffer.push(",");
+			//pos:pos, t:theetime()
+	} else {
+		fs.appendFileSync(thepath + name + "timelog.csv", positionBuffer, function(err));
+		///fs.appendFile("C:\\Users\\David\\Documents\\CuddleBitV2\\recordings\\" + name + "_parameters.json", JSON.stringify(parameters), function(err){
+		positionBuffer = []
+	}
+}
 
 function mapValue(value, minIn, maxIn, minOut, maxOut){
 	return ((value / (maxIn - minIn) )*(maxOut - minOut))+minOut;
